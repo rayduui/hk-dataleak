@@ -61,7 +61,7 @@
     <div class="subtitle">剔走你有份嘅，連成一線就 BINGO · 結果顯示洩漏資料 <span class="badge">疑 未經證實</span></div>
   </header>
   <div class="controls">
-    <label>排序： <select id="sortSelect" onchange="changeSort()"><option value="original">原 Bingo 順序</option><option value="date">按月份（新→舊）</option><option value="date-asc">按月份（舊→新）</option><option value="impact">按影響人數（多→少）</option><option value="name">按機構名稱</option></select></label>
+    <label>排序： <select id="sortSelect" onchange="changeSort()"><option value="date" selected>按日期（新→舊）</option><option value="date-asc">按日期（舊→新）</option><option value="impact">按影響人數（多→少）</option><option value="name">按機構名稱</option></select></label>
     <button class="secondary" onclick="toggleResult()">查看洩漏資料清單</button>
   </div>
   <div class="bingo-grid" id="grid"></div>
@@ -100,17 +100,33 @@ const cases = [
   { month: "11月", date: "2026-11", name: "AEON信貸", detail: "系統未授權查閱", impact: 500, suspected: false, leaked: "系統遭未經授權查閱（具體資料範圍未詳列）" }
 ];
 let marked = Array(25).fill(false);
-function getSortedIndices() { const sort = document.getElementById('sortSelect').value; const indices = Array.from({length: 25}, (_, i) => i); if (sort === 'original') return indices; return indices.sort((a, b) => { const ca = cases[a], cb = cases[b]; if (sort === 'date') return cb.date.localeCompare(ca.date); if (sort === 'date-asc') return ca.date.localeCompare(cb.date); if (sort === 'impact') return (cb.impact || 0) - (ca.impact || 0); if (sort === 'name') return ca.name.localeCompare(cb.name, 'zh-HK'); return 0; }); }
-function renderGrid() { const grid = document.getElementById('grid'); grid.innerHTML = ''; const order = getSortedIndices(); order.forEach((origIdx) => { const c = cases[origIdx]; const cell = document.createElement('div'); cell.className = 'cell'; if (c.suspected) cell.classList.add('suspected'); if (marked[origIdx]) cell.classList.add('marked'); if (c.suspected) cell.innerHTML += `<div class="sus-tag">疑</div>`; cell.innerHTML += `${c.month ? `<div class="month">${c.month}</div>` : ''}<div class="name">${c.name.replace(/\n/g, '<br>')}</div><div class="detail">${c.detail.replace(/\n/g, '<br>')}</div>`; cell.onclick = () => toggle(origIdx); grid.appendChild(cell); }); updateStats(); updateResultPanel(); }
+function formatDate(dateStr) { if (!dateStr || dateStr === '9999') return ''; const parts = dateStr.split('-'); if (parts.length === 3) return `${parts[1]}月${parts[2]}日`; if (parts.length === 2) return `${parts[1]}月`; return dateStr; }
+function getDataTypeGroups(markedCases) {
+  const groups = { '身份證 / 身份證明': [], '電話號碼': [], '電郵地址': [], '信用卡 / 付款資料': [], '地址 / 聯絡資料': [], '健康 / 醫療相關': [], '其他資料': [] };
+  markedCases.forEach(c => {
+    const text = c.leaked.toLowerCase();
+    let added = false;
+    if (text.includes('身份證') || text.includes('身份證明') || text.includes('護照')) { groups['身份證 / 身份證明'].push(c); added = true; }
+    if (text.includes('電話')) { groups['電話號碼'].push(c); added = true; }
+    if (text.includes('電郵')) { groups['電郵地址'].push(c); added = true; }
+    if (text.includes('信用卡') || text.includes('卡號') || text.includes('付款') || text.includes('銀行')) { groups['信用卡 / 付款資料'].push(c); added = true; }
+    if (text.includes('地址') || text.includes('聯絡')) { groups['地址 / 聯絡資料'].push(c); added = true; }
+    if (text.includes('健康') || text.includes('醫療') || text.includes('病人')) { groups['健康 / 醫療相關'].push(c); added = true; }
+    if (!added) groups['其他資料'].push(c);
+  });
+  return groups;
+}
+function getSortedIndices() { const sort = document.getElementById('sortSelect').value || 'date'; const indices = Array.from({length: 25}, (_, i) => i); return indices.sort((a, b) => { const ca = cases[a], cb = cases[b]; if (sort === 'date') return cb.date.localeCompare(ca.date); if (sort === 'date-asc') return ca.date.localeCompare(cb.date); if (sort === 'impact') return (cb.impact || 0) - (ca.impact || 0); if (sort === 'name') return ca.name.localeCompare(cb.name, 'zh-HK'); return 0; }); }
+function renderGrid() { const grid = document.getElementById('grid'); grid.innerHTML = ''; const order = getSortedIndices(); order.forEach((origIdx) => { const c = cases[origIdx]; const cell = document.createElement('div'); cell.className = 'cell'; if (c.suspected) cell.classList.add('suspected'); if (marked[origIdx]) cell.classList.add('marked'); if (c.suspected) cell.innerHTML += `<div class="sus-tag">疑</div>`; cell.innerHTML += `<div class="month">${formatDate(c.date)}</div><div class="name">${c.name.replace(/\n/g, '<br>')}</div><div class="detail">${c.detail.replace(/\n/g, '<br>')}</div>`; cell.onclick = () => toggle(origIdx); grid.appendChild(cell); }); updateStats(); updateResultPanel(); }
 function toggle(origIdx) { marked[origIdx] = !marked[origIdx]; renderGrid(); updateURL(); }
 function updateStats() { const count = marked.filter(Boolean).length; document.getElementById('count').textContent = count; document.getElementById('bingoText').classList.toggle('show', checkBingo()); }
 function checkBingo() { const lines = [[0,1,2,3,4],[5,6,7,8,9],[10,11,12,13,14],[15,16,17,18,19],[20,21,22,23,24],[0,5,10,15,20],[1,6,11,16,21],[2,7,12,17,22],[3,8,13,18,23],[4,9,14,19,24],[0,6,12,18,24],[4,8,12,16,20]]; return lines.some(line => line.every(i => marked[i])); }
-function updateResultPanel() { const list = document.getElementById('resultList'); const markedCases = cases.map((c, i) => ({...c, i})).filter(c => marked[c.i]); if (markedCases.length === 0) { list.innerHTML = '<div style="color:#888;text-align:center;padding:20px;">未有標記任何案件</div>'; return; } list.innerHTML = markedCases.map(c => `<div class="result-item"><div class="org">${c.name.replace(/\n/g, ' ')} ${c.suspected ? '<span style="color:#888;font-size:0.8rem">（疑）</span>' : ''}</div><div class="meta">${c.month} · ${c.detail}</div><div class="leaked"><strong>洩漏資料：</strong>${c.leaked}</div></div>`).join(''); }
+function updateResultPanel() { const list = document.getElementById('resultList'); const markedCases = cases.map((c, i) => ({...c, i})).filter(c => marked[c.i]); if (markedCases.length === 0) { list.innerHTML = '<div style="color:#888;text-align:center;padding:20px;">未有標記任何案件</div>'; return; } const groups = getDataTypeGroups(markedCases); let html = ''; for (const [type, items] of Object.entries(groups)) { if (items.length === 0) continue; html += `<h4 style="color:var(--yellow);margin:16px 0 8px;font-size:1rem;">${type}</h4>`; html += items.map(c => `<div class="result-item"><div class="org">${c.name.replace(/\n/g, ' ')} ${c.suspected ? '<span style="color:#888;font-size:0.8rem">（疑）</span>' : ''}</div><div class="meta">${formatDate(c.date)} · ${c.detail}</div><div class="leaked"><strong>洩漏資料：</strong>${c.leaked}</div></div>`).join(''); } list.innerHTML = html || '<div style="color:#888;text-align:center;padding:20px;">未有標記任何案件</div>'; }
 function toggleResult() { document.getElementById('resultPanel').classList.toggle('show'); }
 function changeSort() { renderGrid(); }
 function updateURL() { const state = marked.map(m => m ? '1' : '0').join(''); history.replaceState(null, '', '#' + btoa(state)); }
 function loadFromURL() { const hash = location.hash.slice(1); if (hash) { try { const state = atob(hash); if (state.length === 25) marked = state.split('').map(c => c === '1'); } catch (e) {} } }
-function shareResult() { const count = marked.filter(Boolean).length; const bingo = checkBingo(); let text = `我中咗香港資料外洩 BINGO！\n標記咗 ${count} 格${bingo ? '，有 Bingo！' : '。'}\n\n洩漏資料清單：\n`; cases.forEach((c, i) => { if (marked[i]) { text += `• ${c.name.replace(/\n/g, ' ')}：${c.leaked}\n`; } }); text += `\n睇下你中幾多：${location.href}`; document.getElementById('shareText').value = text; document.getElementById('shareModal').classList.add('show'); if (navigator.share) { navigator.share({ title: '香港資料外洩 BINGO', text, url: location.href }).catch(() => {}); } }
+function shareResult() { const count = marked.filter(Boolean).length; const bingo = checkBingo(); const markedCases = cases.map((c, i) => ({...c, i})).filter(c => marked[c.i]); let text = `我中咗香港資料外洩 BINGO！\n標記咗 ${count} 格${bingo ? '，有 Bingo！' : '。'}\n\n洩漏資料（按類型）：\n`; const groups = getDataTypeGroups(markedCases); for (const [type, items] of Object.entries(groups)) { if (items.length === 0) continue; text += `\n【${type}】\n`; items.forEach(c => { text += `• ${c.name.replace(/\n/g, ' ')}（${formatDate(c.date)}）：${c.leaked}\n`; }); } text += `\n睇下你中幾多：${location.href}`; document.getElementById('shareText').value = text; document.getElementById('shareModal').classList.add('show'); if (navigator.share) { navigator.share({ title: '香港資料外洩 BINGO', text, url: location.href }).catch(() => {}); } }
 function copyShare() { navigator.clipboard.writeText(document.getElementById('shareText').value).then(() => alert('已複製！')); }
 function closeModal() { document.getElementById('shareModal').classList.remove('show'); }
 function resetCard() { marked = Array(25).fill(false); renderGrid(); updateURL(); }
