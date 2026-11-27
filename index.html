@@ -134,6 +134,8 @@
 <div class="share-modal" id="shareModal"><div class="modal-content"><h3>複製你嘅 Bingo 報告</h3><div id="reportImageContainer" style="margin: 12px 0; text-align: center;"></div><textarea id="shareText" readonly></textarea><div class="actions"><button onclick="copyShare()">複製文字 + 連結</button><button class="secondary" onclick="downloadReport()">下載報告圖</button><button class="secondary" onclick="closeModal()">關閉</button></div></div></div>
 <script>
 const cases = [
+  { month: "11月", date: "2026-11-27", name: "康體通\nSmartPLAY", detail: "約9萬用戶", impact: 90000, suspected: false, leaked: "姓名、性別、出生日期、地址、電郵地址、電話號碼" },
+
   { month: "11月", date: "2026-11-25", name: "城市售票網\nURBTIX", detail: "130萬用戶", impact: 1300000, suspected: false, leaked: "用戶名稱/姓名、電話號碼、電郵地址（無身份證、信用卡已遮蔽）" },
   { month: "11月", date: "2026-11-24", name: "港怡醫院", detail: "病人 App", impact: 490000, suspected: false, leaked: "姓名、身份證明文件號碼、聯絡資料（部分報導指約49萬人；無醫療紀錄及信用卡）" },
   { month: "11月", date: "2026-11-12", name: "SOGO", detail: "82萬會員", impact: 820000, suspected: false, leaked: "會員號碼、姓名、電話、電郵地址、會員積分資料" },
@@ -253,6 +255,7 @@ function renderTimeline() {
     item.className = 'tl-item' + (marked[i] ? ' marked' : '');
     function getSource(c) {
   const n = c.name;
+  if (n.includes("SmartPLAY") || n.includes("康體通")) return '<div class="tl-source">來源：<a href="https://www.hk01.com/%E7%A4%BE%E6%9C%83%E6%96%B0%E8%81%9E/60415730/%E5%BA%B7%E6%96%87%E7%BD%B2smartplay%E5%BA%B7%E9%AB%94%E9%80%9A%E6%B6%89%E5%A4%96%E6%B3%849%E8%90%AC%E5%90%8D%E7%94%A8%E6%88%B6%E8%B3%87%E6%96%99-%E7%A7%81%E9%9A%B1%E7%BD%B2%E4%BB%8A%E6%8E%A5%E7%BD%B2%E6%96%B9%E9%80%9A%E5%A0%B1" target="_blank" rel="noopener">HK01</a> · <a href="https://www.i-cable.com/%E6%96%B0%E8%81%9E%E8%B3%87%E8%A8%8A/528780/smartplay%E5%BA%B7%E9%AB%94%E9%80%9A%E8%B3%87%E6%96%99%E5%A4%96%E6%B4%A9-%E7%B4%849%E8%90%AC%E4%BA%BA%E5%8F%97%E5%BD%B1%E9%9F%BF-%E5%8C%85%E6%8B%AC%E5%9C%B0%E5%9D%80-%E9%9B%BB" target="_blank" rel="noopener">有線新聞</a></div>';
   if (n.includes("AEON")) return '<div class="tl-source">來源：<a href="https://www1.hkexnews.hk/listedco/listconews/sehk/2026/1126/2026112601051.pdf" target="_blank" rel="noopener">港交所公告</a> · <a href="https://news.rthk.hk/rthk/ch/component/k2/1878730-20261121.htm" target="_blank" rel="noopener">RTHK</a></div>';
   if (n.includes("URBTIX") || n.includes("城市售票")) return '<div class="tl-source">來源：<a href="https://www.news.gov.hk/eng/2026/11/20261125/20261125_194241_650.html" target="_blank" rel="noopener">政府新聞</a> · <a href="https://www.hk01.com/%E7%A4%BE%E6%9C%83%E6%96%B0%E8%81%9E/60415012/%E5%9F%8E%E5%B8%82%E5%94%AE%E7%A5%A8%E7%B6%B2%E8%A2%AB%E9%BB%91%E5%AE%A2%E5%85%A5%E4%BE%B5-%E6%B6%89%E7%B4%84130%E8%90%AC%E4%BD%BF%E7%94%A8%E8%80%85%E5%80%8B%E4%BA%BA%E8%B3%87%E6%96%99-%E5%BA%B7%E6%96%87%E7%BD%B2%E5%B7%B2%E5%A0%B1%E8%AD%A6" target="_blank" rel="noopener">HK01</a></div>';
   if (n.includes("港怡")) return '<div class="tl-source">來源：<a href="https://www.info.gov.hk/gia/general/202611/24/P2026112400686.htm" target="_blank" rel="noopener">政府新聞</a> · <a href="https://news.rthk.hk/rthk/ch/component/k2/1879095-20261124.htm" target="_blank" rel="noopener">RTHK</a></div>';
