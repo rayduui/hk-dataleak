@@ -248,7 +248,17 @@ function renderTimeline() {
   sorted.forEach(({c, i}) => {
     const item = document.createElement('div');
     item.className = 'tl-item' + (marked[i] ? ' marked' : '');
-    const source = c.name.includes("AEON") ? '<div class="tl-source">來源：<a href="https://www1.hkexnews.hk/listedco/listconews/sehk/2026/1126/2026112601051.pdf" target="_blank" rel="noopener">港交所公告</a> · <a href="https://news.rthk.hk/rthk/ch/component/k2/1878730-20261121.htm" target="_blank" rel="noopener">RTHK</a></div>' : '<div class="tl-source">來源：私隱署 / 傳媒報道</div>';
+    function getSource(c) {
+  const n = c.name;
+  if (n.includes("AEON")) return '<div class="tl-source">來源：<a href="https://www1.hkexnews.hk/listedco/listconews/sehk/2026/1126/2026112601051.pdf" target="_blank" rel="noopener">港交所公告</a> · <a href="https://news.rthk.hk/rthk/ch/component/k2/1878730-20261121.htm" target="_blank" rel="noopener">RTHK</a></div>';
+  if (n.includes("URBTIX") || n.includes("城市售票")) return '<div class="tl-source">來源：<a href="https://www.news.gov.hk/eng/2026/11/20261125/20261125_194241_650.html" target="_blank" rel="noopener">政府新聞</a> · <a href="https://www.hk01.com/%E7%A4%BE%E6%9C%83%E6%96%B0%E8%81%9E/60415012/%E5%9F%8E%E5%B8%82%E5%94%AE%E7%A5%A8%E7%B6%B2%E8%A2%AB%E9%BB%91%E5%AE%A2%E5%85%A5%E4%BE%B5-%E6%B6%89%E7%B4%84130%E8%90%AC%E4%BD%BF%E7%94%A8%E8%80%85%E5%80%8B%E4%BA%BA%E8%B3%87%E6%96%99-%E5%BA%B7%E6%96%87%E7%BD%B2%E5%B7%B2%E5%A0%B1%E8%AD%A6" target="_blank" rel="noopener">HK01</a></div>';
+  if (n.includes("港怡")) return '<div class="tl-source">來源：<a href="https://www.info.gov.hk/gia/general/202611/24/P2026112400686.htm" target="_blank" rel="noopener">政府新聞</a> · <a href="https://news.rthk.hk/rthk/ch/component/k2/1879095-20261124.htm" target="_blank" rel="noopener">RTHK</a></div>';
+  if (n.includes("SOGO")) return '<div class="tl-source">來源：<a href="https://www.scmp.com/news/hong-kong/law-and-crime/article/3374260/hong-kong-sogo-data-breach-puts-personal-information-820000-members-risk" target="_blank" rel="noopener">SCMP</a> · <a href="https://www.guandian.hk/article/20261112/10061672.html" target="_blank" rel="noopener">觀點</a></div>';
+  if (n.includes("24/7")) return '<div class="tl-source">來源：<a href="https://news.rthk.hk/rthk/ch/component/k2/1879375-20261126.htm" target="_blank" rel="noopener">RTHK</a> · <a href="https://www.hk01.com/%E7%A4%BE%E6%9C%83%E6%96%B0%E8%81%9E/60415229/24-7-fitness%E7%B3%BB%E7%B5%B1%E9%81%AD%E6%9C%AA%E7%B6%93%E6%8E%88%E6%AC%8A%E5%AD%98%E5%8F%96-%E6%B6%89%E5%8F%8A%E9%83%A8%E4%BB%BD%E7%8F%BE%E6%9C%89%E5%8F%8A%E5%89%8D%E6%9C%83%E5%93%A1%E5%80%8B%E4%BA%BA%E8%B3%87%E6%96%99" target="_blank" rel="noopener">HK01</a></div>';
+  if (n.includes("MoneySmart")) return '<div class="tl-source">來源：<a href="https://www.moneysmart.sg/security-check" target="_blank" rel="noopener">MoneySmart 公告</a></div>';
+  return '<div class="tl-source">來源：私隱署 / 傳媒報道</div>';
+}
+const source = getSource(c);
     item.innerHTML = `
       <div class="tl-date">${formatDate(c.date)} ${c.suspected ? '· 疑' : ''}</div>
       <div class="tl-name">${c.name.replace(/\n/g, ' ')}</div>
